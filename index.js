@@ -14,9 +14,154 @@ let calculoFinalizado = false;
 
 display.focus();
 
+function processaInput(valorBotao) {
+  if (valorBotao == 'C') {
+    display.value = '0';
+    primeiroNumero = '';
+    operador = '';
+    numeroAtual = '';
+    resultado = 0;
+
+  } else if (valorBotao == '=') {
+    try {
+      let expressaoEval = display.value
+        .replace(/\./g, '')
+        .replace(/,/g, '.');
+      let resultadoNumero = eval(expressaoEval);
+
+
+      if (!isFinite(resultadoNumero)) {
+        display.value = 'Erro!'
+        return;
+      } else {
+        const formatador = new Intl.NumberFormat('pt-BR');
+        const textoFormatado = formatador.format(resultadoNumero);
+
+        display.value = textoFormatado;
+        calculoFinalizado = true;
+      }
+
+    } catch (erro) {
+      display.value = "Erro!";
+    }
+  } else if (valorBotao == "CE") {
+    display.value = display.value.slice(0, -1);
+    if (display.value === "" || display.value === " ") {
+      display.value = "0";
+    }
+  }
+
+  else if (valorBotao == '←') {
+    if (display.value.endsWith(" ")) {
+      display.value = display.value.slice(0, -3)
+    } else {
+      display.value = display.value.slice(0, -1);
+    }
+    if (display.value === '') {
+      display.value = 0;
+    }
+  } else if (valorBotao === "%") {
+    let partes = display.value.trim().split(' ');
+
+    if (partes.length === 3) {
+      let primeiroNumero = parseFloat(partes[0].replace(/\./g, '').replace(',', '.'));
+      let operador = partes[1];
+      let segundoNumero = parseFloat(partes[2].replace(/\./g, '').replace(',', '.'));
+
+      let resultadoPercentual = (primeiroNumero * segundoNumero) / 100;
+
+      if (operador === '+' || operador === '-') {
+        partes[2] = resultadoPercentual;
+        display.value = partes.join(' ');
+      } else {
+        display.value = resultadoPercentual;
+        calculoFinalizado = true;
+      }
+    }
+  }
+
+  else {
+
+    if (valorBotao == '+' || valorBotao == '-' || valorBotao == '*' || valorBotao == '/') {
+      if (display.value === 'Erro!') {
+        display.value = 'Digite um número.';
+        return;
+      }
+
+      if (display.value === 'Digite um número.') {
+        if (['+', '-', '*', '/'].includes(valorBotao)) {
+          return;
+        } else {
+          display.value = valorBotao;
+          return;
+        }
+      }
+
+      if (calculoFinalizado) {
+        calculoFinalizado = false
+        display.value += ' ' + valorBotao + ' ';
+        return;
+      }
+
+      let terminaComOperador = display.value.trim().endsWith('+') ||
+        display.value.trim().endsWith('-') ||
+        display.value.trim().endsWith('*') ||
+        display.value.trim().endsWith('/');
+
+      if (terminaComOperador) {
+        display.value = display.value.slice(0, -3);
+        calculoFinalizado = false;
+      }
+      display.value += " " + valorBotao + " ";
+    }
+    else {
+      if (calculoFinalizado) {
+        display.value = valorBotao;
+        calculoFinalizado = false;
+        return;
+      } else if (display.value === '0' && valorBotao !== '.') {
+        display.value = valorBotao;
+        return;
+      }
+
+      if (valorBotao === ".") {
+        if (display.value === "Digite um número." || display.value === "Erro!") {
+          display.value = "0,";
+          display.value = formataDisplay(display.value);
+          return;
+        }
+
+        if (display.value === "0") {
+          display.value = "0,";
+          display.value = formataDisplay(display.value);
+          return;
+        }
+
+        let ultimaParte = display.value.split(/[\+\-\*\/]/).pop().trim().replace(/\./g, '').replace(/,/g, '.');
+
+        if (!ultimaParte.includes('.')) {
+          display.value += ",";
+          return;
+        }
+      }
+
+      else {
+        if (display.value === "Erro!" || display.value === "Digite um número.") {
+          display.value = valorBotao;
+          return;
+        }
+        display.value += valorBotao;
+      }
+    }
+  }
+  display.value = formataDisplay(display.value);
+}
+
 document.addEventListener('keydown', () => {
   display.focus();
+  event.preventDefault();
 });
+
 
 function éOperador(caractere) {
   const operadores = "+-*/%";
@@ -24,69 +169,39 @@ function éOperador(caractere) {
 }
 
 document.addEventListener('keydown', (e) => {
-  const teclasPermitidas = "0123456789+-*/%=,";
-  const operadores = "+-*/%";
+  // Define quais teclas são aceitas
+  const teclasPermitidas = "0123456789+-*/%=.,c";
 
-  display.focus();
+  // Pega a tecla pressionada
+  let tecla = e.key;
 
-  if (!teclasPermitidas.includes(e.key) && !["Enter", "Backspace", "Delete"].includes(e.key)) {
-    e.preventDefault();
-    return;
+  // Filtra para aceitar apenas teclas permitidas e de controle
+  if (!teclasPermitidas.includes(tecla) && !["Enter", "Backspace", "Delete"].includes(tecla)) {
+    return; // Se não for, para a função aqui
   }
 
-  let ultimo = display.value.slice(-1);
-  let numeroAtual = display.value.split(/[\+\-\*\/%]/).pop().replace(/\./g, '').replace(',', '.');
-
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    botaoIgual.click();
-    return;
+  // "Traduz" as teclas especiais
+  if (tecla === 'Enter') {
+    tecla = '=';
+  }
+  if (tecla === 'Backspace') {
+    tecla = '←';
+  }
+  if (tecla === 'Delete') {
+    tecla = 'C';
+  }
+  if (tecla === ',') {
+    tecla = '.';
   }
 
-  if (operadores.includes(e.key) && éOperador(ultimo)) {
-    e.preventDefault();
-    return;
-  }
-
-  if (e.key === ',' && numeroAtual.includes('.')) {
-    e.preventDefault();
-    return;
-  }
-
-  if (["Backspace", "Delete"].includes(e.key)) {
-    setTimeout(() => {
-      if (display.value === '') {
-        display.value = '0';
-      } else {
-        display.value = formataDisplay(display.value);
-      }
-    }, 0);
-    return;
-  }
-
-  if (display.value === "0" && !isNaN(parseInt(e.key))) {
-    display.value = e.key;
-    e.preventDefault();
-    return;
-  }
-
-
-  if (e.key === ',') {
-    display.value += ',';
-  } else {
-    display.value += e.key;
-    if (!display.value.endsWith(',')) {
-      display.value = formataDisplay(display.value);
-    }
-  }
-  e.preventDefault();
+  // Chama a função principal com a tecla correta
+  processaInput(tecla);
 });
 
 
 
 
 function formataDisplay(expressao) {
-  // Divide expressão pelos operadores, mantendo-os
   let partes = expressao.split(/\s*([+\-*/])\s*/);
 
   return partes.map(parte => {
@@ -133,146 +248,6 @@ atualizaTema();
 
 botoes.forEach(botao => {
   botao.addEventListener('click', () => {
-    let valorBotao = botao.textContent;
-
-    if (valorBotao == 'C') {
-      display.value = '0';
-      primeiroNumero = '';
-      operador = '';
-      numeroAtual = '';
-      resultado = 0;
-
-    } else if (valorBotao == '=') {
-      try {
-        let expressaoEval = display.value
-          .replace(/\./g, '')
-          .replace(/,/g, '.');
-        let resultadoNumero = eval(expressaoEval);
-
-
-        if (!isFinite(resultadoNumero)) {
-          display.value = 'Erro!'
-          return;
-        } else {
-          const formatador = new Intl.NumberFormat('pt-BR');
-          const textoFormatado = formatador.format(resultadoNumero);
-
-          display.value = textoFormatado;
-          calculoFinalizado = true;
-        }
-
-      } catch (erro) {
-        display.value = "Erro!";
-      }
-    } else if (valorBotao == "CE") {
-      display.value = display.value.slice(0, -1);
-      if (display.value === "" || display.value === " ") {
-        display.value = "0";
-      }
-    }
-
-    else if (valorBotao == '←') {
-      if (display.value.endsWith(" ")) {
-        display.value = display.value.slice(0, -3)
-      } else {
-        display.value = display.value.slice(0, -1);
-      }
-      if (display.value === '') {
-        display.value = 0;
-      }
-    } else if (valorBotao === "%") {
-      try {
-        let partes = display.value.trim().split(" ");
-        if (partes.length === 3) {
-          let base = parseFloat(partes[0].replace(/,/g, ''));
-          let valor = parseFloat(partes[2].replace(/,/g, ''));
-          if (!isNaN(base) && !isNaN(valor)) {
-            partes[2] = (base * valor / 100).toString();
-            display.value = partes.join(" ");
-          }
-        }
-      } catch (e) {
-        display.value = "Erro!";
-      }
-    }
-
-    else {
-
-      if (valorBotao == '+' || valorBotao == '-' || valorBotao == '*' || valorBotao == '/') {
-        if (display.value === 'Erro!') {
-          display.value = 'Digite um número.';
-          return;
-        }
-
-        if (display.value === 'Digite um número.') {
-          if (['+', '-', '*', '/'].includes(valorBotao)) {
-            return;
-          } else {
-            display.value = valorBotao;
-            return;
-          }
-        }
-
-        if (calculoFinalizado) {
-          calculoFinalizado = false
-          display.value += ' ' + valorBotao + ' ';
-          return;
-        }
-
-        let terminaComOperador = display.value.trim().endsWith('+') ||
-          display.value.trim().endsWith('-') ||
-          display.value.trim().endsWith('*') ||
-          display.value.trim().endsWith('/');
-
-        if (terminaComOperador) {
-          display.value = display.value.slice(0, -3);
-          calculoFinalizado = false;
-        }
-        display.value += " " + valorBotao + " ";
-      }
-      else {
-        if (calculoFinalizado) {
-          display.value = valorBotao;
-          calculoFinalizado = false;
-          return;
-        } else if (display.value === '0' && valorBotao !== '.') {
-          display.value = valorBotao;
-          return;
-        }
-
-        if (valorBotao === ",") {
-          if (display.value === "Digite um número." || display.value === "Erro!") {
-            display.value = "0,";
-            display.value = formataDisplay(display.value);
-            return;
-          }
-
-          if (display.value === "0") {
-            display.value = "0,";
-            display.value = formataDisplay(display.value);
-            return;
-          }
-
-          let ultimaParte = display.value.split(/[\+\-\*\/]/).pop().trim().replace(/\./g, '').replace(/,/g, '.');
-
-          if (!ultimaParte.includes('.')) {
-            display.value += ",";
-          }
-        }
-
-
-
-
-        else {
-          if (display.value === "Erro!" || display.value === "Digite um número.") {
-            display.value = valorBotao;
-            return;
-          }
-          display.value += valorBotao;
-        }
-      }
-    }
-
-    display.value = formataDisplay(display.value);
+    processaInput(botao.textContent);
   })
 })
