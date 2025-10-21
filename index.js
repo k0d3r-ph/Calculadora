@@ -24,7 +24,7 @@ function éOperador(caractere) {
 }
 
 document.addEventListener('keydown', (e) => {
-  const teclasPermitidas = "0123456789+-*/%=.";
+  const teclasPermitidas = "0123456789+-*/%=,";
   const operadores = "+-*/%";
 
   display.focus();
@@ -35,8 +35,7 @@ document.addEventListener('keydown', (e) => {
   }
 
   let ultimo = display.value.slice(-1);
-  let numeroAtual = display.value.split(/[\+\-\*\/%]/).pop().replace(/,/g, '');
-
+  let numeroAtual = display.value.split(/[\+\-\*\/%]/).pop().replace(/\./g, '').replace(',', '.');
 
   if (e.key === 'Enter') {
     e.preventDefault();
@@ -49,8 +48,7 @@ document.addEventListener('keydown', (e) => {
     return;
   }
 
-
-  if (e.key === '.' && numeroAtual.includes('.')) {
+  if (e.key === ',' && numeroAtual.includes('.')) {
     e.preventDefault();
     return;
   }
@@ -59,47 +57,55 @@ document.addEventListener('keydown', (e) => {
     setTimeout(() => {
       if (display.value === '') {
         display.value = '0';
+      } else {
+        display.value = formataDisplay(display.value);
       }
-      display.value = formataDisplay(display.value);
-    }, 0)
+    }, 0);
     return;
   }
 
   if (display.value === "0" && !isNaN(parseInt(e.key))) {
     display.value = e.key;
-    display.value = formataDisplay(display.value)
     e.preventDefault();
     return;
   }
 
-  display.value += e.key;
-  display.value = formataDisplay(display.value);
+
+  if (e.key === ',') {
+    display.value += ',';
+  } else {
+    display.value += e.key;
+    if (!display.value.endsWith(',')) {
+      display.value = formataDisplay(display.value);
+    }
+  }
   e.preventDefault();
 });
 
 
+
+
 function formataDisplay(expressao) {
+  // Divide expressão pelos operadores, mantendo-os
   let partes = expressao.split(/\s*([+\-*/])\s*/);
 
   return partes.map(parte => {
     let valor = parte.trim();
-    if (valor !== '' && !isNaN(valor)) {
-      let [inteiro, decimal] = valor.split('.');
-
-      inteiro = inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-
-      if (decimal !== undefined) {
-        return `${inteiro}.${decimal}`;
-      } else {
-        return inteiro;
+    // Se for número válido
+    if (valor !== '' && !isNaN(valor.replace(/\./g, '').replace(',', '.'))) {
+      // Converte para número e formata no padrão brasileiro
+      let numero = parseFloat(valor.replace(/\./g, '').replace(',', '.'));
+      if (!isNaN(numero)) {
+        return new Intl.NumberFormat('pt-BR', {
+          minimumFractionDigits: valor.includes(',') ? 1 : 0,
+          maximumFractionDigits: 10
+        }).format(numero);
       }
-    } else {
-      return valor;
     }
+    // Retorna operadores ou partes inválidas como estão
+    return valor;
   }).join(' ');
 }
-
-
 
 
 function atualizaTema() {
@@ -138,7 +144,9 @@ botoes.forEach(botao => {
 
     } else if (valorBotao == '=') {
       try {
-        let expressaoEval = display.value.replace(/,/g, '');
+        let expressaoEval = display.value
+          .replace(/\./g, '')
+          .replace(/,/g, '.');
         let resultadoNumero = eval(expressaoEval);
 
 
@@ -232,25 +240,26 @@ botoes.forEach(botao => {
           return;
         }
 
-        if (valorBotao === ".") {
+        if (valorBotao === ",") {
           if (display.value === "Digite um número." || display.value === "Erro!") {
-            display.value = "0.";
+            display.value = "0,";
             display.value = formataDisplay(display.value);
             return;
           }
 
           if (display.value === "0") {
-            display.value = "0.";
+            display.value = "0,";
             display.value = formataDisplay(display.value);
             return;
           }
 
-          let ultimaParte = display.value.split(/[\+\-\*\/]/).pop().trim().replace(/,/g, '');
+          let ultimaParte = display.value.split(/[\+\-\*\/]/).pop().trim().replace(/\./g, '').replace(/,/g, '.');
 
           if (!ultimaParte.includes('.')) {
-            display.value += ".";
+            display.value += ",";
           }
         }
+
 
 
 
