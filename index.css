@@ -1,0 +1,87 @@
+:root {
+  --cor-de-fundo: #ffffff;
+  --cor-do-texto: #111111;
+  --cinza: #333;
+}
+
+body.dark-mode {
+  --cor-de-fundo: #111111;
+  --cor-do-texto: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: var(--cor-de-fundo);
+}
+
+.container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#sol-icon {
+  position: absolute;
+  font-size: 10px;
+  border: none;
+  top: 30px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  display: none;
+}
+
+#lua-icon {
+  position: absolute;
+  font-size: 10px;
+  border: none;
+  top: 30px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+}
+
+.calculadora {
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 5px 10px 10px rgba(0, 0, 0, 0.3);
+}
+
+.container input {
+  background-color: var(--cor-do-texto);
+  color: var(--cor-de-fundo);
+}
+
+.botoes {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  width: 400px;
+  height: 250px;
+  gap: 1px;
+}
+
+.botoes button {
+  background-color: var(--cor-do-texto);
+  color: var(--cor-de-fundo);
+  border: none;
+  transition: all 0.1s;
+  font-size: 16px;
+}
+
+.botoes button:hover {
+  background-color: var(--cinza);
+}
+
+input {
+  width: 400px;
+  height: 50px;
+  text-align: right;
+  font-size: 30px;
+}
