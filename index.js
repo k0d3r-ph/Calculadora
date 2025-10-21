@@ -24,9 +24,7 @@ function processaInput(valorBotao) {
 
   } else if (valorBotao == '=') {
     try {
-      let expressaoEval = display.value
-        .replace(/\./g, '')
-        .replace(/,/g, '.');
+      let expressaoEval = display.value.replace(/\./g, '').replace(/,/g, '.');
       let resultadoNumero = eval(expressaoEval);
 
 
@@ -34,10 +32,8 @@ function processaInput(valorBotao) {
         display.value = 'Erro!'
         return;
       } else {
-        const formatador = new Intl.NumberFormat('pt-BR');
-        const textoFormatado = formatador.format(resultadoNumero);
-
-        display.value = textoFormatado;
+        const formatador = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 10 });
+        display.value = formatador.format(resultadoNumero);
         calculoFinalizado = true;
       }
 
@@ -68,17 +64,17 @@ function processaInput(valorBotao) {
       let operador = partes[1];
       let segundoNumero = parseFloat(partes[2].replace(/\./g, '').replace(',', '.'));
 
-      let resultadoPercentual = (primeiroNumero * segundoNumero) / 100;
-
       if (operador === '+' || operador === '-') {
-        partes[2] = resultadoPercentual;
+        partes[2] = (primeiroNumero * segundoNumero) / 100;
         display.value = partes.join(' ');
       } else {
+        let resultadoPercentual = (primeiroNumero * segundoNumero) / 100;
         display.value = resultadoPercentual;
         calculoFinalizado = true;
       }
     }
   }
+
 
   else {
 
@@ -209,7 +205,7 @@ function formataDisplay(expressao) {
     // Se for número válido
     if (valor !== '' && !isNaN(valor.replace(/\./g, '').replace(',', '.'))) {
       // Converte para número e formata no padrão brasileiro
-      let numero = parseFloat(valor.replace(/\./g, '').replace(',', '.'));
+      let numero = parseFloat(valor.replace(',', '.'));
       if (!isNaN(numero)) {
         return new Intl.NumberFormat('pt-BR', {
           minimumFractionDigits: valor.includes(',') ? 1 : 0,
